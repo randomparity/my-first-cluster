@@ -9,7 +9,6 @@ node IP addresses: 192.168.10.30, 192.168.10.31, 192.168.10.32
 cluster IP addresses: 192.168.10.50 ... 192.168.10.69
 ## Setup Static IP Address
 ```
-sudo vi 00-installer-config.yaml
 sudo apt update
 sudo apt upgrade
 sudo vi /etc/netplan/00-installer-config.yaml
@@ -20,12 +19,15 @@ sudo apt purge cloud-init
 sudo rm -rf /etc/cloud && sudo rm -rf /var/lib/cloud/
 sudo apt autoremove
 ```
-## Install Micro Kubernetes (Microk8s) with Snap (v1.20.7)
+## Install Micro Kubernetes (Microk8s) with Snap (tested with v1.20.7)
 ```
 sudo snap install microk8s --classic
 snap info microk8s
 sudo usermod -a -G microk8s sysadmin
 sudo chown -f -R sysadmin ~/.kube
+echo "# Microk8s aliases"             >> ~/.bash_aliases
+echo "alias mkctl='microk8s kubectl'" >> ~/.bash_aliases
+echo "alias helm='microk8s helm3'"    >> ~/.bash_aliases
 ```
 ## Verify Firewall is Disabled
 ```
@@ -34,7 +36,7 @@ sudo ufw status
 ## Install Microk8s packages
 ```
 micro8s status
-microk8s enable dns dashboard storage helm3 metallb
+microk8s enable dns dashboard storage helm3
 micro8s status
 ```
 ## Review Cluster Status (Optional)
@@ -48,7 +50,7 @@ mkctl get all --all-namespaces
 microk8s add-node
 ```
 ## Install Required Helm Repos
-(Uses alias helm = "microk8s helm")
+(Assumes "alias helm = 'microk8s helm'" exists in ~/.bash_aliases)
 ```
 helm repo add stable https://charts.helm.sh/stable
 ```
@@ -64,14 +66,6 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 ```
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
-```
-### Install Packages
-```
-helm install ingress-nginx ingress-nginx/ingress-nginx --namespace kube-system --set defaultBackend.enabled=false
-helm show values nextcloud/nextcloud >> nextcloud-values.yaml
-helm show values nextcloud/nextcloud >> nextcloud-values.yaml.orig
-helm install nextcloud nextcloud/nextcloud --namespace nextcloud --values nextcloud-values.yaml
-helm install cert-manager jetstack/cert-manager --namespace kube-system
 ```
 ## Setup Persistent Volume Storage
 Assumes NFS server is available and is mounted on all nodes in the cluster
@@ -136,6 +130,14 @@ mkctl get pvc -n nextcloud
 ```
 mkctl delete -f nextcloud-persistent-volume-claim.yaml
 mkctl delete -f nextcloud-persistent-volume.yaml
+```
+### Install Packages
+```
+helm install ingress-nginx ingress-nginx/ingress-nginx --namespace kube-system --set defaultBackend.enabled=false
+helm show values nextcloud/nextcloud >> nextcloud-values.yaml
+helm show values nextcloud/nextcloud >> nextcloud-values.yaml.orig
+helm install nextcloud nextcloud/nextcloud --namespace nextcloud --values nextcloud-values.yaml
+helm install cert-manager jetstack/cert-manager --namespace kube-system
 ```
 ## Setup Ingress Controller Service
 ```
@@ -291,6 +293,7 @@ helm uninstall nextcloud --namespace nextcloud
 ```
 microk8s leave
 microk8s reset
+rm -rf ~/.kube/*
 ```
 ## Nginx Ingress
 https://kubernetes.github.io/ingress-nginx/deploy/#using-helm
