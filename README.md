@@ -68,7 +68,7 @@ helm repo add jetstack https://charts.jetstack.io
 helm repo update
 ```
 ## Setup Persistent Volume Storage
-Assumes NFS server is available and is mounted on all nodes in the cluster
+My setup has an NFS server at 192.168.10.2 with a share named "/cluster" which will be mounted on /mnt/cluster of all nodes.
 ```
 sudo mkdir /mnt/cluster
 sudo chown -R sysadmin:sysadmin /mnt/cluster
@@ -82,6 +82,9 @@ Mount the NFS share
 ```
 sudo mount /mnt/cluster
 mkdir /mnt/cluster/nextcloud
+```
+Create a namespace in the kubernetes cluster for nextcloud
+```
 mkctl create namespace nextcloud
 vi nextcloud-persistent-volume.yaml
 ```
@@ -133,15 +136,15 @@ mkctl delete -f nextcloud-persistent-volume.yaml
 ```
 ### Install Packages
 ```
-helm install ingress-nginx ingress-nginx/ingress-nginx --namespace kube-system --set defaultBackend.enabled=false
 helm show values nextcloud/nextcloud >> nextcloud-values.yaml
 helm show values nextcloud/nextcloud >> nextcloud-values.yaml.orig
 helm install nextcloud nextcloud/nextcloud --namespace nextcloud --values nextcloud-values.yaml
 helm install cert-manager jetstack/cert-manager --namespace kube-system
 ```
-## Setup Ingress Controller Service
+## Setup Ingress and Load Balancer Services
 ```
-microk8s enable ingress metallb:192.168.10.50-192.168.10.69
+microk8s enable metallb:192.168.10.50-192.168.10.69
+helm install ingress-nginx ingress-nginx/ingress-nginx --namespace kube-system --set defaultBackend.enabled=false
 vi ingress-service.yaml
 ```
 ~/ingress-service.yaml
