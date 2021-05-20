@@ -136,9 +136,6 @@ mkctl delete -f nextcloud-persistent-volume.yaml
 ```
 ### Install Packages
 ```
-helm show values nextcloud/nextcloud >> nextcloud-values.yaml
-helm show values nextcloud/nextcloud >> nextcloud-values.yaml.orig
-helm install nextcloud nextcloud/nextcloud --namespace nextcloud --values nextcloud-values.yaml
 ```
 ## Setup Ingress and Load Balancer Services
 ```
@@ -155,6 +152,7 @@ ingress-nginx-controller   LoadBalancer   10.152.183.11   192.168.10.50   80:315
 ```
 Visit the URL http://<ExternalIP>, should receive an nginx "404" error, indicating the proxy server is up but no services are available behind the proxy.
 ## Install Certificate Manager Custom Resource Definitions
+Staging generates a certificate but that certificate is untrusted in the browser and will generate a browser warning.  Production certificate works as expected but has more limited rate limits.  Use staging for testing.  (See https://letsencrypt.org/docs/staging-environment/ for more details.)
 ```
 mkctl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.crds.yaml
 helm install cert-manager jetstack/cert-manager --namespace kube-system
@@ -204,7 +202,8 @@ mkctl apply -f letsencrypt-prod.yaml
 mkctl get services -n kube-system -o wide
 mkctl get pods -n kube-system -l app.kubernetes.io/instance=cert-manager -o wide
 ```
-### Enable port forwarding from your internet IP address to the ExternalIP noted above, then test that certificates are issued.
+### Enable port forwarding from your internet IP address to the ExternalIP noted above
+### Generate test certificate
 ```
 vi cert-manager-ingress-test.yaml
 ```
@@ -237,11 +236,17 @@ spec:
 ```
 mkctl apply -f cert-manager-ingress-test.yaml
 mkctl get certificaterequest -o wide
-mkctl delete -f cert-manager-ingress.test.yaml
+mkctl get certificate -o wide
+mkctl delete -f cert-manager-ingress-test.yaml
 ```
 ## Installing Nextcloud
+Fetch the Nextcloud default configuration options and modify to suit your needs.
+```
+helm show values nextcloud/nextcloud >> nextcloud-values.yaml
+cp nextcloud-values.yaml nextcloud-values.yaml.orig
 vi nextcloud-values.yaml
 ```
+Suggest at least the following changes to nextcloud-values.yaml:
 ```
 64c64
 <   host: nextcloud.kube.home
@@ -262,6 +267,7 @@ vi nextcloud-values.yaml
 ---
 >   size: 500Gi
 ```
+Install the Nextcloud package
 ```
 helm install nextcloud nextcloud/nextcloud --namespace nextcloud --values nextcloud-values.yaml
 mkctl get pods -n nextcloud
@@ -302,6 +308,7 @@ mkctl apply -f nextcloud-ingress.yaml
 mkctl get certificaterequest -n nextcloud -o wide
 mkctl get certificate -n nextcloud -o wide
 ```
+Now test if everything worked by visiting your new Nextcloud site at https://nextcloud.<domain>.
 ## Remove Nextcloud If You Made a Mistake
 ```
 mkctl delete -f nextcloud-ingress.yaml
