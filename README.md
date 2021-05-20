@@ -169,7 +169,7 @@ metadata:
   name: letsencrypt-staging
 spec:
   acme:
-    email: dave@drc.nz
+    email: changeme
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-staging
@@ -189,7 +189,7 @@ metadata:
   name: letsencrypt-prod
 spec:
   acme:
-    email: dave@drc.nz
+    email: changeme
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-prod
