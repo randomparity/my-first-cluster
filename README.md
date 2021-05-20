@@ -139,43 +139,21 @@ mkctl delete -f nextcloud-persistent-volume.yaml
 helm show values nextcloud/nextcloud >> nextcloud-values.yaml
 helm show values nextcloud/nextcloud >> nextcloud-values.yaml.orig
 helm install nextcloud nextcloud/nextcloud --namespace nextcloud --values nextcloud-values.yaml
-helm install cert-manager jetstack/cert-manager --namespace kube-system
 ```
 ## Setup Ingress and Load Balancer Services
 ```
 microk8s enable metallb:192.168.10.50-192.168.10.69
 helm install ingress-nginx ingress-nginx/ingress-nginx --namespace kube-system --set defaultBackend.enabled=false
 vi ingress-service.yaml
-```
-~/ingress-service.yaml
-```
-apiVersion: v1
-kind: Service
-metadata:
-  name: ingress
-  namespace: ingress
-spec:
-  selector:
-    name: nginx-ingress-microk8s
-  type: LoadBalancer
-  # loadBalancerIP is optional. MetalLB will automatically allocate an IP from its pool if not
-  # specified. You can also specify one manually.
-  # loadBalancerIP: x.y.z.a
-  ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 80
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 443
-```
-```
-mkctl apply -f ingress-service.yaml
-mkctl -n ingress get svc
 mkctl --namespace kube-system get services -o wide -w ingress-nginx-controller
 ```
+Take note of the ExternalIP address which will be used later:
+```
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                      AGE   SELECTOR
+ingress-nginx-controller   LoadBalancer   10.152.183.11   192.168.10.50   80:31537/TCP,443:32753/TCP   21s   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+^C
+```
+Visit the URL http://<ExternalIP>, should receive an nginx "404" error, indicating the proxy server is up but no services are available behind the proxy.
 ## Install Certificate Manager Custom Resource Definitions
 ```
 mkctl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.crds.yaml
