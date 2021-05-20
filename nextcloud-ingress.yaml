@@ -1,25 +1,25 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: "nextcloud" # Same namespace as the deployment
-  name: "nextcloud-ingress" # Name of the ingress (see kubectl get ingress -A)
+  namespace: "nextcloud"
+  name: "nextcloud-ingress"
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod" # Encrypt using the ClusterIssuer deployed while setting up Cert-Manager
-    nginx.ingress.kubernetes.io/proxy-body-size:  "50m" # Increase the size of the maximum allowed size of the client request body
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size:  "50m"
 spec:
   tls:
   - hosts:
-    - "nextcloud.drc.nz" # Host to access nextcloud
-    secretName: "nextcloud-prod-tls" # Name of the certifciate (see kubectl get certificate -A)
+    - changeme
+    secretName: "nextcloud-prod-tls"
   rules:
-  - host: "nextcloud.drc.nz" # Host to access nextcloud
+  - host: changeme
     http:
       paths:
-        - path: /  # We will access NextCloud via the URL https://nextcloud.<domain.com>/
+        - path: /
           pathType: Prefix
           backend:
             service:
-              name: "nextcloud" # Mapping to the service (see kubectl get services -n nextcloud)
+              name: "nextcloud"
               port: 
-                number: 8080 # Mapping to the port (see kubectl get services -n nextcloud)
+                number: 8080

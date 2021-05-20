@@ -209,7 +209,7 @@ vi nextcloud-values.yaml
 64c64
 <   host: nextcloud.kube.home
 ---
->   host: nextcloud.drc.nz
+>   host: changeme
 66c66
 <   password: changeme
 ---
@@ -246,10 +246,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - "nextcloud.drc.nz"
+    - changeme
     secretName: "nextcloud-prod-tls"
   rules:
-  - host: "nextcloud.drc.nz"
+  - host: changeme
     http:
       paths:
         - path: /

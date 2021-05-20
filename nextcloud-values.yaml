@@ -61,7 +61,7 @@ lifecycle: {}
   # preStopCommand: []
 
 nextcloud:
-  host: nextcloud.drc.nz
+  host: changeme
   username: admin
   password: changeme
   ## Use an existing secret
