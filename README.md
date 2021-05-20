@@ -201,8 +201,45 @@ spec:
 ```
 mkctl apply -f letsencrypt-staging.yaml
 mkctl apply -f letsencrypt-prod.yaml
-mkctl get services -n kube-system -l app=ingress-nginx -o wide
 mkctl get services -n kube-system -o wide
+mkctl get pods -n kube-system -l app.kubernetes.io/instance=cert-manager -o wide
+```
+### Enable port forwarding from your internet IP address to the ExternalIP noted above, then test that certificates are issued.
+```
+vi cert-manager-ingress-test.yaml
+```
+~/cert-manager-ingress.test.yaml
+```
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "cert-manager-ingress-test"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+spec:
+  tls:
+  - hosts:
+    - changeme
+    secretName: "changeme-staging-tls"
+  rules:
+  - host: changeme
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: "http"
+              port:
+                number: 80
+```
+```
+mkctl apply -f cert-manager-ingress-test.yaml
+mkctl get certificaterequest -o wide
+mkctl delete -f cert-manager-ingress.test.yaml
+```
+## Installing Nextcloud
 vi nextcloud-values.yaml
 ```
 ```
